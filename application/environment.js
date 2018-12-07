@@ -30,16 +30,26 @@ module.exports.Yaml = class EnvironmentYaml {
     file += '.yaml'
 
     try {
-      fs.accessSync(file, fs.constants.F_OK)
+      fs.accessSync(file, fs.constants.R_OK)
     } catch(e) {
-      return {}
+      try {
+        let destination_file = Path.join.apply(Path, path) + '.dist.yaml'
+
+        fs.accessSync(destination_file, fs.constants.R_OK)
+
+        file = destination_file
+      } catch(e) {
+
+        return {}
+      }
     }
 
     let contents = yaml.safeLoad(fs.readFileSync(file))
 
-    if (fs.existsSync(environmental)) {
+    try {
+      fs.accessSync(environmental, fs.constants.F_OK)
       _.merge(contents, yaml.safeLoad(fs.readFileSync(environmental)))
-    }
+    } catch(e) {}
 
     return contents
   }

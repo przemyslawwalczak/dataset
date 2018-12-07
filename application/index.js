@@ -5,6 +5,8 @@ const Path = require('path')
 const CONFIG_PATH = Path.literal('@data/application.yaml')
 const express = require('express')
 
+const Environment = require('@application/environment')
+
 const Exception = module.exports.Exception = new (require('@application/exceptions'))(Path.literal('@data'))
 const Logger = module.exports.Logger = new (require('@application/logger'))('application')
 
@@ -47,4 +49,4 @@ Router.use((exception, request, response, next) => {
 
 module.exports.router = Router
 
-module.exports.attribute = yaml.safeLoad(fs.readFileSync(CONFIG_PATH, 'utf8'))
+module.exports.attribute = new Environment.Yaml(Path.literal('@data', 'application'))
