@@ -28,5 +28,7 @@ build/Release
 node_modules
 data/*
 
-!*.gitkeep
-!*.dist.yaml
+!.gitkeep
+# !*.dist.yaml
+# !data/.gitkeep
+# !.yaml
