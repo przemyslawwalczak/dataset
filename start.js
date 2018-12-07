@@ -40,6 +40,10 @@ instance.listen(Application.attribute.port, Application.attribute.host, () => {
       }
     }
 
+    server.use('/favicon.ico', (request, response) => {
+      response.status(501).end()
+    })
+
     server.use((request, response) => {
       response.status(200).json({
         error: 'Application was stopped due to a critical error. Contact your administrator'
