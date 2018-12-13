@@ -41,6 +41,18 @@ class Api {
       router.use(Request.route, (request, response, next) => {
         request.sandbox = new Request.version.sandbox(Request.version, request)
 
+        if (request.sandbox.prepare) {
+          Promise.resolve(request.sandbox.prepare(request, response))
+          .then(() => {
+            next()
+          })
+          .catch(next)
+        } else {
+          next()
+        }
+      })
+
+      router.use(Request.route, (request, response, next) => {
         Request.script.runInNewContext(request.sandbox)
 
         let method = request.sandbox[request.method]
@@ -50,15 +62,25 @@ class Api {
         }
 
         Promise.resolve(method(request))
-        .then(result => {
-          // TODO: Switch between different types
-        
-          response.status(200).json(result)
+        .then(async (result) => {
+          if (request.sandbox.deconstructor) {
+            await Promise.resolve(request.sandbox.deconstructor(request, response))
+          }
+
+          request.result = result
         })
         .catch(next)
-        .finally(() => {
+        .finally(async () => {
+          if (request.sandbox.finally) {
+            await Promise.resolve(request.sandbox.finally(request, response))
+          }
+
           delete request.sandbox
+
+          // TODO: Switch between different types
+          response.status(200).json(request.result)
         })
+        .catch(next)
       })
     }
 

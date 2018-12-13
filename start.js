@@ -2,6 +2,7 @@ require('literal-require')
 
 const Path = require('path')
 const http = require('http')
+const https = require('https')
 
 const express = require('express')
 const Application = require('@application')
@@ -14,7 +15,13 @@ const server = express()
 
 server.use(Application.router)
 
-const instance = http.createServer(server)
+let instance
+
+if (true) {
+  instance = http.createServer(server)
+} else {
+  instance = http.createServer(server)
+}
 
 instance.listen(Application.attribute.port, Application.attribute.host, () => {
   let address = instance.address()
@@ -50,7 +57,5 @@ instance.listen(Application.attribute.port, Application.attribute.host, () => {
       })
     })
   })
-
-  throw new Error('something bad happened here')
 })
 

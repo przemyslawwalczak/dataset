@@ -27,6 +27,7 @@ Router.use(BodyParser.json())
 
 Router.use((request, response, next) => {
   request.full_url = request.url
+  request.form = request.body || {}
   next()
 })
 

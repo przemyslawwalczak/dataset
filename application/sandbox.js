@@ -1,4 +1,14 @@
+class Assert {
+  static result() {
 
+  }
+}
+
+class Format {
+  static test() {
+
+  }
+}
 
 class Sandbox {
   constructor(version, request) {
@@ -8,6 +18,7 @@ class Sandbox {
 
     this.Exception = version.exceptions
     this.Logger = version.Logger
+    this.Access = version.access
 
     for (let object of Object.keys(Sandbox)) {
       this[object] = Sandbox[object]
