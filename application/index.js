@@ -16,12 +16,13 @@ const Version = require('@application/version')
 
 const BodyParser = require('body-parser')
 
-const Winston = require('winston')
-
 Router.use('/favicon.ico', (request, response) => {
   response.status(501).end()
 })
 
+const cookie_parser = require('cookie-parser')
+
+Router.use(cookie_parser())
 Router.use(BodyParser.urlencoded({ extended: false }))
 Router.use(BodyParser.json())
 

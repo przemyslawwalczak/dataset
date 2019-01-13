@@ -39,6 +39,7 @@ class Api {
   bind(router) {
     for (let Request of this.routes) {
       router.use(Request.route, (request, response, next) => {
+        request.version = this.version
         request.sandbox = new Request.version.sandbox(Request.version, request)
 
         if (request.sandbox.prepare) {
@@ -61,7 +62,7 @@ class Api {
           throw new Error(`No request method (${request.method}) is defined for route: ${request.full_url}`)
         }
 
-        Promise.resolve(method(request))
+        Promise.resolve(method(request, response))
         .then(async (result) => {
           if (request.sandbox.deconstructor) {
             await Promise.resolve(request.sandbox.deconstructor(request, response))
@@ -75,10 +76,20 @@ class Api {
             await Promise.resolve(request.sandbox.finally(request, response))
           }
 
+          for (let transaction of request.sandbox._transaction) {
+            if (!transaction.finalized()) {
+              console.log('transaction rollbacked')
+              
+              transaction.rollback()
+            }
+          }
+
           delete request.sandbox
 
           // TODO: Switch between different types
-          response.status(200).json(request.result)
+          if (!response.headerSent) {
+            response.status(200).json(request.result)
+          }          
         })
         .catch(next)
       })

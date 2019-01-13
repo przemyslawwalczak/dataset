@@ -23,21 +23,35 @@ if (true) {
   instance = http.createServer(server)
 }
 
+const living_connections = []
+
+instance.on('connection', socket => {
+  living_connections.push(socket)
+
+  socket.on('close', () => {
+    living_connections.splice(living_connections.indexOf(socket), 1)
+  })
+})
+
 instance.listen(Application.attribute.port, Application.attribute.host, () => {
   let address = instance.address()
 
   Logger.info(Util.format('Dataset listening: %s:%s', address.address, address.port))
 
-  let raised_application_error = false
+  let APPLICATION_CRITICAL_ERROR = false
 
   process.on('uncaughtException', (exception) => {
     Logger.error(exception)
 
-    if (raised_application_error) {
+    if (APPLICATION_CRITICAL_ERROR) {
       return
     }
 
-    raised_application_error = true
+    APPLICATION_CRITICAL_ERROR = true
+
+    for (let socket of living_connections) {
+      socket.destroy()
+    }
 
     let server_stack = server._router.stack
 

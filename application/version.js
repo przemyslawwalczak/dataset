@@ -35,47 +35,52 @@ class Version {
     let access_table = this.attribute.access || {}
     let access_drivers = Path.join(directory, namespace, 'access')
 
+    this.Logger = new Logger(namespace)
+
     for (let namespace in access_table) {
       let access = access_table[namespace]
       let options = access.option
       let driver = Path.join(access_drivers, access.driver)
 
-      this.access[namespace] = new (require( driver ))(options)
+      this.access[namespace] = new (require( driver ))(options, this.Logger)
     }
 
-    // for ( let file of File.walkSync() ) {
-    //   console.log(driver)
-    //   let configu
-    //   let driver = new (require(file))()
-    // }
+    this.connection = {}
 
-    // console.log(access_drivers)
+    let connection_table = this.attribute.connection || {}
+    
+    for (let id in connection_table) {
+      let connection = connection_table[id]
+      let driver = require(Path.literal('@application', 'driver', connection.driver))
 
-    // for (let file of )) {
-    //   let object = Path.parse(file)
-    //   let configuration = 
-    //   let access = new (require(file))(configuration)
+      this.connection[id] = new driver(connection.option || {})
+    }
 
-    //   this.access[object.name] = (sandbox) => {
-    //     return new (require(file))()
-    //   }
-    // }
+    this.default_connection = this.connection[this.attribute.default.connection]
+
+    let queries_directory = Path.join(directory, namespace, 'query')
+    let queries = fs.readdirSync(queries_directory)
 
     this.query = {}
+    this.script = {}
 
-    // for (let file of File.walkSync(Path.join(directory, namespace, 'query'))) {
-    //   let object = Path.parse(file)
+    for (let query of queries) {
+      let file = Path.parse(query)
 
-    //   this.query[object.name] = (sandbox) => {
-    //     return new (require(file))(sandbox)
-    //   }
-    // }
+      let namespace = file.name.toUpperCase().replace(/\-/g, '_')
+
+      let script = this.script[namespace] = fs.readFileSync(Path.join(queries_directory, query), 'utf8')
+
+      script = script.replace(/--(.*?)\r?\n/g, '')
+
+      this.query[namespace] = async (data = {}) => {
+        return await this.default_connection.query(script, data)
+      }
+    }
 
     this.sandbox = new Environment.File(Path.join(this.directory, namespace), '.js')
 
     this.exceptions = new Exceptions(this.directory, Application.Exception)
-
-    this.Logger = new Logger(namespace)
 
     new Api(Path.join(this.directory, 'api', Path.sep), this).bind(this.router)
   }

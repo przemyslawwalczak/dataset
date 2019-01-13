@@ -108,6 +108,11 @@ class DailyTransporter extends Transporter {
       data = this.formatter(data)
     }
 
+    if (this.split()) {
+      this.stream.end()
+      this.create_stream()
+    }
+
     this.stream.write(JSON.stringify(data) + "\r\n", (error) => {
       this.filesize += this.stream.bytesWritten
 
